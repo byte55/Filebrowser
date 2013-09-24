@@ -21,6 +21,15 @@ function getFileExtension(file)
 	return (/[.]/.exec(file)) ? /[^.]+$/.exec(file) : undefined;
 }
 
+function getMD5(file_path)
+{
+	$.post('ajax.php',{file_path: file_path, action : 'getMD5'},function(data){
+		if(typeof data != 'object')
+			data = $.parseJSON(data);
+		return data.md5;
+	});	
+}
+
 function refreshAll()
 {
 	$.post('ajax.php',{folder : folder, action : 'getSubDirs'},function(data){
@@ -60,4 +69,66 @@ function downloadFile(file_path)
 	$('#download_file iframe').attr('src','download.php');
 	$('#download_file iframe').contents().find('.file_path').attr('value',file_path);
 	$('#download_file iframe').contents().find('form').submit();
+}
+
+function saveEditor(file_path,value)
+{
+	$.post('ajax.php',{file_path : file_path, data: value, action : 'saveContent'},function(data){
+		if(typeof data != 'object')
+			data = $.parseJSON(data);
+		if(data.error == '')
+		{
+			alert_glow('save');
+			return true;
+		}
+		else
+		{
+			error = data.error;
+			return false;
+		}
+	});
+}
+
+function closeImageEditor(e)
+{
+	e.preventDefault();
+	if($('#image_editor').is(':visible') && e.keyCode == '27')
+		$('#image_editor').hide();
+}
+
+function showDialog(id)
+{
+	$('#'+id).dialog('open');
+}
+
+function applyFilter(filter)
+{
+	if($("#image_editor img").length > 0)
+	{
+		Caman("#image_editor img", function () {
+			// If such an effect exists, use it:
+			if( filter in this){
+				//NOTE THIS IS THE LINE THAT I ADD FOR YOU:
+				this.revert();
+				this[filter]();
+				this.render();
+			}
+			else 
+				alert('mist:' + filter);
+		});
+	}
+	else if($("#image_editor canvas").length > 0)
+	{
+		Caman("#image_editor canvas", function () {
+			// If such an effect exists, use it:
+			if( filter in this){
+				//NOTE THIS IS THE LINE THAT I ADD FOR YOU:
+				this.revert();
+				this[filter]();
+				this.render();
+			}
+			else 
+				alert('mist:' + filter);
+		});
+	}
 }

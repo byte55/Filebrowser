@@ -13,7 +13,7 @@ FileBrowser
   <div id="explorer">
     <div id="dirs">
 	<?
-	$sql = "SELECT `folder` FROM `users_root_folders` WHERE `users_id` = ".$db->escape($_SESSION['user']['id']);
+	$sql = "SELECT `folder`,`name` FROM `users_root_folders` WHERE `users_id` = ".$db->escape($_SESSION['user']['id']);
 	$result = $db->query($sql);
 	if($db->num($result) > 0)
 	{
@@ -21,7 +21,8 @@ FileBrowser
 		{
 			#$dir = basename();
 			$subdirs = hasSubDirs(ROOT.$dir['folder']);
-			$name = basename($dir['folder'],'/');
+			$name = basename($dir['name'],'/');
+			$_SESSION['user']['root'][basename($dir['name'])] = ROOT_DIR.basename($dir['folder']).'/';
 			?>
 			<div class="root dir <?if(!$subdirs) echo 'empty';?>" title="<?=$name?>">
 			  <div class="select">
@@ -43,15 +44,46 @@ FileBrowser
   <script type="text/javascript">
     var current_dir = '';
 	var file_content_org = '';
-	var editor;
+	var file_md5_org = '';
+	var editor = null;
 	var file_path = '';
+	var paste = {};
+	var copy = false;
+	var cut = false;
+	var error = '';
     $(function(){
+		//$('#saveChanges').dialog('open');
+		$(document).on('click', '#tablesort tbody tr',function(e){
+			e.preventDefault();
+			if(e.ctrlKey)
+			{
+				$(this).addClass('selected');
+			}
+			else
+			{
+				$('#tablesort tbody tr').removeClass('selected');
+				$(this).addClass('selected');
+			}
+			
+		});
+
+		$(document).on('keyup', 'body',closeImageEditor);
+		
+		$(document).on('click', '#tablesort tbody tr',function(e){
+			e.stopPropagation();
+			$(this).addClass('selected');
+		});
+		$(document).on('click', '#viewer',function(e){
+			e.stopPropagation();
+			$('#tablesort tbody tr').removeClass('selected');
+		});
+		
 	    window.onbeforeunload = function() {
 			if(file_content_org != editor.getValue())
 			{
 				console.log(file_content_org);
 				console.log(editor.getValue());
-				return "You have unsaved changes in your current file. Do you want to leave/refresh the page?^\n\n" + editor.getValue() + "\n\n\n\n" + file_content_org;
+				return "You have unsaved changes in your current file. Do you want to leave/refresh the page?";//^\n\n" + editor.getValue() + "\n\n\n\n" + file_content_org;
 			}
 		}
 		editor = ace.edit("editor");
@@ -65,17 +97,13 @@ FileBrowser
 					alert('File is readonly');
 				else
 				{
-					$.post('ajax.php',{file_path : file_path, data: editor.getValue(), action : 'saveContent'},function(data){
-						if(typeof data != 'object')
-							data = $.parseJSON(data);
-						if(data.error == '')
-						{
-							file_content_org = editor.getValue();
-							alert_glow('save');
-						}
+					if(file_md5_org == getMD5(file_path))
+						if(!saveEditor(file_path,edit.getValue()))
+							alert(error);
 						else
-							alert(data.error);
-					});
+							alert_glow(saved);
+					else
+						showDialog('overwriteContent');
 				}
 			},
 			readOnly: true // false if this command should not apply in readOnly mode
@@ -86,42 +114,13 @@ FileBrowser
 			exec: function(editor) {
 				if(file_content_org != editor.getValue())
 				{
-					$("<div>Do you want to save your changes?</div>").dialog({
-					  resizable: false,
-					  height:140,
-					  title: 'Unsafed changes',
-					  modal: true,
-					  buttons: {
-						"Yes": function() {
-							$.post('ajax.php',{file_path : file_path, data: editor.getValue(), action : 'saveContent'},function(data){
-								if(typeof data != 'object')
-									data = $.parseJSON(data);
-								if(data.error == '')
-									alert_glow('save');
-								else
-									alert(data.error);
-							});
-							$( this ).dialog( "close" );
-							editor.setValue('');
-							file_content_org = '';
-							$('#editor').hide();
-						},
-						"No": function() {
-							$( this ).dialog( "close" );
-							editor.setValue('');
-							file_content_org = '';
-							$('#editor').hide();
-						},
-						Cancel: function() {
-						  $( this ).dialog( "close" );
-						}
-					  }
-					});
+					$("#saveChanges").dialog('open');
 				}
 				else
 				{
 					editor.setValue('');
 					file_content_org = '';
+					file_md5_org = '';
 					$('#editor').hide();
 				}
 			},
@@ -159,26 +158,41 @@ FileBrowser
 				$('#tablesort').tablesorter({
 					//sortForce: [[3,0]],
 					sortList: [[3,0],[0,0]] 
-				}).bind("sortStart",function(e,ui){
-					//console.log($(e.target).find('.headerSortUp'));
-				});
-				$('#tablesort tbody tr').click(function(e){
+				}).bind("sortBegin",function(e,ui){
 					e.preventDefault();
-					if(e.ctrlKey)
+					alert('own start');
+					if($(this).find('.headerSortUp').length > 0)
 					{
-						$(this).addClass('selected');
+						name = $(this).find('.headerSortUp').html().trim();
+						sort = 0;
 					}
 					else
 					{
-						$('#tablesort tbody tr').removeClass('selected');
-						$(this).addClass('selected');
+						name = $(this).find('.headerSortDown').html();
+						sort = 1;
 					}
-					
+					col = -1;
+					if(name == 'Name')
+						col = 0;
+					else if(name == 'Size')
+						col = 1;
+					else if(name == 'last change')
+						col = 2;
+					else
+						alert('huh?!');
+
+					if(col > -1)
+					{
+						console.log([[col,sort],[3,sort]]);
+						$("#tablesort").trigger("sorton",[[col,sort],[3,sort]]);
+					}
+					else alert('mist: ' + name);
+
 				});
 			});
 		});
 		
-		$(document).on('dblclick', '#tablesort .dir', function(e){
+		$(document).on('dblclick', '#viewer .dir', function(e){
 			e.preventDefault();
 			//alert(current_dir);
 			folder = $(this).find('.name').text();
@@ -193,15 +207,15 @@ FileBrowser
 			$(search).trigger('click');
 			
 		});
-		$(document).on('dblclick', '#tablesort .file', function(e){
+		$(document).on('dblclick', '#viewer .file', function(e){
 			file_content_org = '';
+			file_md5_org = '';
 			editor.setValue('');
 			e.preventDefault();
 			file = $(this).find('.name').text();
 			file_path = current_dir + file;
 			//alert(file);
-			tmp = getFileExtension(file);
-			ext = tmp[0]
+			ext = getFileExtension(file)[0];
 			//alert(typeof ext);
 			//console.log(ext);
 			hl = "";
@@ -241,12 +255,15 @@ FileBrowser
 				case "rar":
 					extern = 'archive';
 					break;
+				case "exe":
+					extern = 'download';
+					break;
 				default:
 				  hl = "na"; // not avaiable
 			}
 			if(extern == '')
 			{
-				if(hl != 'na')
+				if(hl != 'na' && extern != 'download')
 				{
 					editor.getSession().setMode("ace/mode/" + hl);
 					$('#loader').show();
@@ -257,7 +274,9 @@ FileBrowser
 							editor.navigateFileStart();
 							editor.focus();
 							file_content_org = editor.getValue();
+							
 							$('#editor').show();
+							$('#loader').hide();
 						}
 						else
 						{
@@ -266,83 +285,19 @@ FileBrowser
 						}
 							
 					},'html');
-					$('#loader').hide();
+					
 				}
+				else if(extern == 'download')
+					downloadFile(file_path);
 				else 
-				{
-					$("<div>There is no valid viewer for this file. What do you want to do?</div>").dialog({
-					  resizable: false,
-					  title: 'No valid viewer',
-					  modal: true,
-					  width: "380px",
-					  buttons: {
-						"Open as Text-File": function() {
-							editor.getSession().setMode("ace/mode/plain_text");
-							$('#loader').show();
-							$.post('ajax.php',{file_path : file_path, action : 'getContent'},function(data){
-								if(data != 'File not found' && data != 'File could not be read')
-								{
-									editor.setValue(data);
-									editor.navigateFileStart();
-									editor.focus();
-									file_content_org = editor.getValue();
-									$('#loader').hide();
-									$('#editor').show();
-								}
-								else
-								{
-									$('#loader').hide();
-									alert(data);
-								}
-							},'html');
-							$( this ).dialog( "close" );
-						},
-						"Donwload file": function() {
-							downloadFile(file_path);
-							$( this ).dialog( "close" );
-						},
-						Cancel: function() {
-						  $( this ).dialog( "close" );
-						}
-					  }
-					});
-				}
+					showDialog('noValidViewer');
 			}
 			else
 			{
 				if(extern == 'archive')
 				{
-					$('#dest input').val(file.slice(0,(ext.length + 1) * -1));
-					$('#dest').dialog({
-					  resizable: false,
-					  title: 'Extract file',
-					  modal: true,
-					  width: "380px",
-					  buttons: {
-						"Extract": function() {
-							$('#loader').show();
-							$.post('ajax.php',{folder: current_dir, file : file_path, dest: $('#dest input').val(), ext: ext, action : 'extractFile'},function(data){
-								if(typeof data != 'object')
-									data = $.parseJSON(data);
-								if(data.error == '')
-								{
-									$('#explorer .selected').trigger('click');
-									$('#loader').hide();
-								}
-								else
-								{
-									$('#loader').hide();
-									alert(data.error);
-								}
-								
-							},'json');
-							$( this ).dialog( "close" );
-						},
-						Cancel: function() {
-						  $( this ).dialog( "close" );
-						}
-					  }
-					});
+					$('#extractArchiv input').val(file.slice(0,(ext.length + 1) * -1));
+					showDialog('extractArchiv');
 				}
 				else if(extern == 'video')
 				{

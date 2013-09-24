@@ -765,12 +765,18 @@
                                 }
                             };
                             setTimeout(function () {
-                                // set css for headers
-                                setHeadersCss($this[0], $headers, config.sortList, sortCSS);
-                                appendToTable(
-	                                $this[0], multisort(
-	                                $this[0], config.sortList, cache)
-								);
+								console.log('event from sorter');
+								console.log(e);
+								alert(e.isDefaultPrevented());
+								if( !e.isDefaultPrevented() ) {
+									// set css for headers
+									setHeadersCss($this[0], $headers, config.sortList, sortCSS);
+									appendToTable(
+										$this[0], multisort(
+										$this[0], config.sortList, cache)
+									);
+								}
+								
                             }, 1);
                             // stop normal event by returning false
                             return false;

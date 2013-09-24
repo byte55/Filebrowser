@@ -200,7 +200,8 @@ function get_execution_time()
 }
 
 function downloadFile($fullPath)
-{ 
+{
+	$fullPath = getRealPath($fullPath);
 	// Must be fresh start 
 	if(headers_sent()) die('Headers Sent');  
 	
@@ -296,4 +297,19 @@ function hasSubDirs($path)
 	return false;
 }
 
+function base64_encode_image ($filename=string) {
+    if ($filename) {
+		$ext = strtolower(pathinfo($filename,PATHINFO_EXTENSION));
+		//echo  'ext: '.$ext;
+        $imgbinary = fread(fopen($filename, "r"), filesize($filename));
+        return 'data:image/' . $ext . ';base64,' . base64_encode($imgbinary);
+    }
+}
+
+function getRealPath($path)
+{	
+	$tmp = explode('/',$path);
+	$tmp[0] = trim($_SESSION['user']['root'][$tmp[0]],'/');
+	return implode('/',$tmp);
+}
 ?>

@@ -1,7 +1,7 @@
 <?php
 date_default_timezone_set('Europe/Berlin');
 setlocale(LC_TIME,'de_DE.utf8');
-define("ROOT_DIR",pathinfo($_SERVER['SCRIPT_FILENAME'],PATHINFO_DIRNAME)."/");
+define("ROOT_DIR",pathinfo($_SERVER['SCRIPT_FILENAME'],PATHINFO_DIRNAME)."/files/");
 
 $website_basedir = 'http://mcgee/work/cine/';
 $db_location = 'localhost';

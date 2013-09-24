@@ -5,6 +5,7 @@ body{
     /*background-color: #91141C;*/
     height:100%;
     width:100%;
+	overflow:hidden;
 }
 
 /*182865  blau
@@ -65,9 +66,12 @@ div.alert_glow{
 	padding-left:16px;
 	padding-top:2px;
 	padding-bottom:2px;
-    -khtml-user-select: none;
-    -moz-user-select: -moz-none;
-    -webkit-user-select: none; 
+	-webkit-touch-callout: none;
+	-webkit-user-select: none;
+	-khtml-user-select: none;
+	-moz-user-select: moz-none;
+	-ms-user-select: none;
+	user-select: none;
 	margin-right:5px;
 }
 
@@ -79,7 +83,7 @@ td.hide, th.hide, .hide{
 
 
 
-#explorer .dir:hover{
+#explorer .dir:hover,#viewer .dir span:hover, #viewer .file span:hover{
 	cursor:pointer;
 }
 
@@ -148,16 +152,16 @@ img.icn{
 
 #editor { 
 	position: absolute;
-	top: 2%;
-	left: 2%;
+	top: 0;
+	left: 0;
 	padding:20px;
 	border:3px solid grey;
 	-moz-border-radius: 10px;
 	-webkit-border-radius: 10px;
 	border-radius: 10px;
 	box-sizing: border-box;
-	height:96%;
-	width:96%;
+	height:100%;
+	width:100%;
 	z-index:99;
 	display:none;
 }
@@ -214,5 +218,26 @@ img.icn{
 }
 
 #download_file{
+	display:none;
+}
+
+#des .extract{
+	display:none;
+}
+
+#image_editor{
+	position:absolute;
+	top:0;
+	left:0;
+	width:100%;
+	height:100%;
+	background-color:white;
+	padding:20px;
+	border:3px solid grey;
+	-moz-border-radius: 10px;
+	-webkit-border-radius: 10px;
+	border-radius: 10px;
+	box-sizing: border-box;
+	z-index:99;
 	display:none;
 }

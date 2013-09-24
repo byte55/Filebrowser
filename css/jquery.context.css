@@ -8,15 +8,19 @@
 .context-menu-item.disabled.hover{cursor:default;background-color:#EEE;}
 .context-menu-submenu:after{content:">";color:#666;position:absolute;top:0;right:3px;z-index:1;}
 .context-menu-item.icon{min-height:18px;background-repeat:no-repeat;background-position:4px 2px;}
-.context-menu-item.icon-edit{background-image:url(images/page_white_edit.png);}
-.context-menu-item.icon-cut{background-image:url(images/cut.png);}
-.context-menu-item.icon-copy{background-image:url(images/page_white_copy.png);}
-.context-menu-item.icon-paste{background-image:url(images/page_white_paste.png);}
-.context-menu-item.icon-delete{background-image:url(images/page_white_delete.png);}
-.context-menu-item.icon-add{background-image:url(images/add.png);}
-.context-menu-item.icon-star{background-image:url(images/star.png);}
-.context-menu-item.icon-zoom{background-image:url(images/zoom_in.png);}
-.context-menu-item.icon-quit{background-image:url(images/door.png);}
+.context-menu-item.icon-cut{background-image:url(../img/icn/cut.png);}
+.context-menu-item.icon-copy{background-image:url(../img/icn/copying_and_distribution.png);}
+.context-menu-item.icon-paste{background-image:url(../img/icn/clipboard_invoice.png);}
+.context-menu-item.icon-delete{background-image:url(../img/icn/cross.png);}
+.context-menu-item.icon-download{background-image:url(../img/icn/inbox_download.png);}
+.context-menu-item.icon-edit{background-image:url(../img/icn/edit_button.png);}
+.context-menu-item.icon-upload{background-image:url(../img/icn/inbox_upload.png);}
+.context-menu-item.icon-new-file{background-image:url(../img/icn/newspaper.png);}
+.context-menu-item.icon-new-folder{background-image:url(../img/icn/folder_vertical_open.png);}
+.context-menu-item.icon-new-zip{background-image:url(../img/icn/folder_vertical_zipper.png);}
+.context-menu-item.icon-open{background-image:url(../img/icn/magnifier.png);}
+.context-menu-item.icon-rename{background-image:url(../img/icn/textfield_rename.png);}
+
 .context-menu-input > label > *{vertical-align:top;}
 .context-menu-input > label > input[type="checkbox"],
 .context-menu-input > label > input[type="radio"]{margin-left:-17px;}

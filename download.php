@@ -1,4 +1,7 @@
 <?
+session_set_cookie_params(time()+60*60*24*30);
+session_name('Filebrowser');
+session_start();
 include "inc/c_locale.php";
 include "inc/config.php";
 
